@@ -240,7 +240,7 @@ export default function Contact() {
                     <option value="">Select…</option>
                     <option>Landing Page</option>
                     <option>Website</option>
-                    <option>PWA / Mobile</option>
+                    <option>Mobile app</option>
                     <option>SaaS / Dashboard</option>
                     <option>Other</option>
                   </select>

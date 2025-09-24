@@ -57,7 +57,7 @@ export default function About() {
               </p>
               <p className="mt-4 text-slate-600">
                 Together, we bring a balance of creativity and engineering to every project.
-                Soleva is not just a digital studio — it’s a partnership built on trust,
+                Soleva is not just a digital studio, it’s a partnership built on trust,
                 collaboration, and the belief that every idea deserves a chance to grow in the
                 digital world.
               </p>
