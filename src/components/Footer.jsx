@@ -7,9 +7,11 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8">
         {/* Logo & Tagline */}
         <div>
-          <img src={logo} alt="Soleva Logo" className="h-16 mb-4" />  {/* was h-10 → now h-16 */}
+          <img src={logo} alt="Soleva Logo" className="h-16 mb-4" />{" "}
+          {/* was h-10 → now h-16 */}
           <p className="text-sm md:text-base leading-relaxed">
-            Where ideas turn into <span className="text-blue-400">digital reality</span>.
+            Where ideas turn into{" "}
+            <span className="text-blue-400">digital reality</span>.
           </p>
         </div>
 
@@ -17,10 +19,26 @@ export default function Footer() {
         <div>
           <h3 className="text-white font-semibold mb-4">Quick Links</h3>
           <ul className="space-y-2 text-sm md:text-base">
-            <li><a href="#home" className="hover:text-blue-400">Home</a></li>
-            <li><a href="#about" className="hover:text-blue-400">About</a></li>
-            <li><a href="#services" className="hover:text-blue-400">Services</a></li>
-            <li><a href="#contact" className="hover:text-blue-400">Contact</a></li>
+            <li>
+              <a href="#home" className="hover:text-blue-400">
+                Home
+              </a>
+            </li>
+            <li>
+              <a href="#about" className="hover:text-blue-400">
+                About
+              </a>
+            </li>
+            <li>
+              <a href="#services" className="hover:text-blue-400">
+                Services
+              </a>
+            </li>
+            <li>
+              <a href="#contact" className="hover:text-blue-400">
+                Contact
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -30,11 +48,12 @@ export default function Footer() {
           <p className="text-sm md:text-base">Email: leenkkrayem@gmail.com</p>
           <p className="text-sm md:text-base">Phone: +961 81 750 923</p>
           <div className="flex space-x-5 mt-5">
-            <a href="https://www.instagram.com/soleva.dev/" target="_blank" className="hover:text-blue-400">
+            <a
+              href="https://www.instagram.com/soleva.dev/"
+              target="_blank"
+              className="hover:text-blue-400"
+            >
               <Instagram size={24} /> {/* was 20 → now 24 */}
-            </a>
-            <a href="https://linkedin.com" target="_blank" className="hover:text-blue-400">
-              <Linkedin size={24} />
             </a>
           </div>
         </div>
