@@ -59,7 +59,11 @@ export default function Contact() {
         website: "",
       });
     } catch {
-      setStatus({ sending: false, ok: false, fail: "Something went wrong. Please try again." });
+      setStatus({
+        sending: false,
+        ok: false,
+        fail: "Something went wrong. Please try again.",
+      });
     }
   }
 
@@ -83,10 +87,12 @@ export default function Contact() {
             Contact
           </span>
           <h2 className="mt-6 text-4xl sm:text-5xl font-extrabold leading-tight text-slate-900">
-            Let’s build something <span className="text-teal-500">great</span> together
+            Let’s build something <span className="text-teal-500">great</span>{" "}
+            together
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-slate-600">
-            Tell us about your idea, timeline, and goals. We’ll get back within 24–48 hours with next steps.
+            Tell us about your idea, timeline, and goals. We’ll get back within
+            24–48 hours with next steps.
           </p>
         </div>
 
@@ -94,7 +100,9 @@ export default function Contact() {
         <div className="mt-16 grid gap-8 md:grid-cols-5">
           {/* Info card */}
           <aside className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-7 shadow-md hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-slate-900">Ways to reach us</h3>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Ways to reach us
+            </h3>
             <ul className="mt-5 space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
@@ -102,8 +110,11 @@ export default function Contact() {
                 </span>
                 <div>
                   <p className="font-medium text-slate-900">Email</p>
-                  <a href="mailto:hello@soleva.studio" className="text-slate-600 hover:text-slate-900">
-                   leenkkrayem@gmail.com
+                  <a
+                    href="mailto:hello@soleva.studio"
+                    className="text-slate-600 hover:text-slate-900"
+                  >
+                    leenkkrayem@gmail.com
                   </a>
                 </div>
               </li>
@@ -129,7 +140,9 @@ export default function Contact() {
                 </span>
                 <div>
                   <p className="font-medium text-slate-900">Location</p>
-                  <p className="text-slate-600">Saida, Lebanon · Remote worldwide</p>
+                  <p className="text-slate-600">
+                    Saida, Lebanon · Remote worldwide
+                  </p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -146,23 +159,31 @@ export default function Contact() {
             <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-xs text-slate-500">Focus</p>
-                <p className="mt-1 font-medium text-slate-900">Web • Mobile • SaaS</p>
+                <p className="mt-1 font-medium text-slate-900">
+                  Web • Mobile • SaaS
+                </p>
               </div>
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-xs text-slate-500">Approach</p>
-                <p className="mt-1 font-medium text-slate-900">Quality • Clarity</p>
+                <p className="mt-1 font-medium text-slate-900">
+                  Quality • Clarity
+                </p>
               </div>
             </div>
           </aside>
 
           {/* Form card */}
           <div className="md:col-span-3 rounded-2xl border border-slate-200 bg-white p-7 shadow-md hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-slate-900">Tell us about your project</h3>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Tell us about your project
+            </h3>
 
             {status.ok && (
               <div className="mt-4 flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800">
                 <CheckCircle2 className="h-5 w-5" />
-                <p className="text-sm">Thanks! Your message has been sent. We’ll reply soon.</p>
+                <p className="text-sm">
+                  Thanks! Your message has been sent. We’ll reply soon.
+                </p>
               </div>
             )}
             {status.fail && (
@@ -185,7 +206,12 @@ export default function Contact() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-700">Full name *</label>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Full name *
+                  </label>
                   <input
                     id="name"
                     name="name"
@@ -196,10 +222,17 @@ export default function Contact() {
                     className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
                     placeholder="Your name"
                   />
-                  {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email *</label>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Email *
+                  </label>
                   <input
                     id="email"
                     name="email"
@@ -210,13 +243,20 @@ export default function Contact() {
                     className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
                     placeholder="name@company.com"
                   />
-                  {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                  )}
                 </div>
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700">Phone (optional)</label>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Phone (optional)
+                  </label>
                   <input
                     id="phone"
                     name="phone"
@@ -228,7 +268,12 @@ export default function Contact() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="projectType" className="block text-sm font-medium text-slate-700">Project type *</label>
+                  <label
+                    htmlFor="projectType"
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Project type *
+                  </label>
                   <select
                     id="projectType"
                     name="projectType"
@@ -244,29 +289,40 @@ export default function Contact() {
                     <option>SaaS / Dashboard</option>
                     <option>Other</option>
                   </select>
-                  {errors.projectType && <p className="mt-1 text-xs text-red-600">{errors.projectType}</p>}
+                  {errors.projectType && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {errors.projectType}
+                    </p>
+                  )}
                 </div>
               </div>
 
+              {/* Budget (optional text input) */}
               <div>
-                <label htmlFor="budget" className="block text-sm font-medium text-slate-700">Estimated budget (optional)</label>
-                <select
+                <label
+                  htmlFor="budget"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  Estimated budget (optional)
+                </label>
+                <input
                   id="budget"
                   name="budget"
+                  type="text"
                   value={form.budget}
                   onChange={onChange}
-                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                >
-                  <option value="">Select…</option>
-                  <option>$1k–$3k</option>
-                  <option>$3k–$5k</option>
-                  <option>$5k–$10k</option>
-                  <option>$10k+</option>
-                </select>
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
+                  placeholder="$2,000 — $5,000 or 'Not sure yet'"
+                />
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-slate-700">Project details *</label>
+                <label
+                  htmlFor="message"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  Project details *
+                </label>
                 <textarea
                   id="message"
                   name="message"
@@ -277,7 +333,9 @@ export default function Contact() {
                   className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
                   placeholder="Tell us about goals, features, and timeline…"
                 />
-                {errors.message && <p className="mt-1 text-xs text-red-600">{errors.message}</p>}
+                {errors.message && (
+                  <p className="mt-1 text-xs text-red-600">{errors.message}</p>
+                )}
               </div>
 
               <label className="flex items-start gap-3 text-sm text-slate-700">
@@ -288,9 +346,14 @@ export default function Contact() {
                   onChange={onChange}
                   className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                 />
-                <span>I agree to be contacted about my inquiry. I understand my info will be handled securely.</span>
+                <span>
+                  I agree to be contacted about my inquiry. I understand my info
+                  will be handled securely.
+                </span>
               </label>
-              {errors.agree && <p className="text-xs text-red-600">{errors.agree}</p>}
+              {errors.agree && (
+                <p className="text-xs text-red-600">{errors.agree}</p>
+              )}
 
               <button
                 type="submit"
