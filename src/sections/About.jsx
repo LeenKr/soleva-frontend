@@ -52,7 +52,7 @@ export default function About() {
               <h3 className="text-xl font-semibold text-slate-900">Who We Are</h3>
               <p className="mt-4 text-slate-600">
                 Soleva was founded by <span className="font-medium">Souad</span> and{" "}
-                <span className="font-medium">Leen</span> — two passionate creators who
+                <span className="font-medium">Leen</span> - two passionate creators who
                 share a vision of making technology more accessible, innovative, and impactful.
               </p>
               <p className="mt-4 text-slate-600">
