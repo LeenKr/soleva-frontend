@@ -6,7 +6,7 @@ const services = [
     blurb: "High-converting landing pages that spotlight your product or campaign and turn traffic into action.",
     points: ["Fast & responsive", "Modern UI", "SEO-ready"] },
   { icon: Globe, title: "Websites (from zero)",
-    blurb: "Fully custom websites built from scratch—structure, features, and design tailored to your brand and goals.",
+    blurb: "Fully custom websites built from scratch-structure, features, and design tailored to your brand and goals.",
     points: ["Custom architecture", "Scalable design", "Fully responsive"] },
   { icon: BarChart3, title: "SaaS & Dashboards",
     blurb: "Reliable SaaS platforms and admin dashboards that streamline workflows and scale with your business.",
@@ -40,7 +40,7 @@ export default function Services() {
               Digital solutions, built your way.
             </h2>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Whether you need a sharp landing page, a fully custom website, or a scalable SaaS platform—Soleva builds
+              Whether you need a sharp landing page, a fully custom website, or a scalable SaaS platform-Soleva builds
               professional solutions that combine design, performance, and reliability.
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function Services() {
           {/* Bottom CTA banner */}
           <div className="mt-14 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#0f2233] via-[#183247] to-[#0f2233] px-6 py-7">
             <p className="text-white/90">
-              Not sure which service you need? Tell us your idea—we’ll turn it into a clear digital plan.
+              Not sure which service you need? Tell us your idea-we’ll turn it into a clear digital plan.
             </p>
             <a href="#contact" className="inline-flex items-center rounded-xl bg-teal-500 px-5 py-2.5 text-white hover:bg-teal-600 transition">
               Get a Quote
