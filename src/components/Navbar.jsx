@@ -65,11 +65,12 @@ export default function Navbar() {
           {/* Logo */}
           {/* Logo */}
           <a href="#home" className="flex items-center gap-3">
-            <img
-              src={logo}
-              alt="Soleva"
-              className="h-10 md:h-12 lg:h-14 w-auto object-contain"
-            />
+           <img
+  src={logo}
+  alt="Soleva"
+  className="h-20 w-auto object-contain"
+/>
+
           </a>
 
           {/* Desktop nav */}
