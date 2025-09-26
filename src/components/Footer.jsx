@@ -45,7 +45,7 @@ export default function Footer() {
         {/* Contact & Social */}
         <div>
           <h3 className="text-white font-semibold mb-4">Get in Touch</h3>
-          <p className="text-sm md:text-base">Email: leenkkrayem@gmail.com</p>
+          <p className="text-sm md:text-base">Email: soleva.dev@gmail.com</p>
           <p className="text-sm md:text-base">Phone: +961 81 750 923</p>
           <div className="flex space-x-5 mt-5">
             <a

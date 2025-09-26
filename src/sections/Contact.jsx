@@ -114,7 +114,7 @@ export default function Contact() {
                     href="mailto:hello@soleva.studio"
                     className="text-slate-600 hover:text-slate-900"
                   >
-                    leenkkrayem@gmail.com
+                    soleva.dev@gmail.com
                   </a>
                 </div>
               </li>
