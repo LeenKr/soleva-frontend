@@ -1,4 +1,4 @@
-import bg from "../assets/testttt.jpg"; // <-- use a wide, high-quality image
+import bg from "../assets/hero.jpg"; // <-- use a wide, high-quality image
 
 export default function Hero() {
   return (
@@ -11,12 +11,12 @@ export default function Hero() {
         backgroundPosition: "center",
       }}
     >
-      {/* dark brand gradient overlay for readability */}
+      {/* dark brand gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f2233]/90 via-[#183247]/75 to-[#0f2233]/88" />
 
       {/* content container */}
-      <div className="relative z-10 px-4 sm:px-6 lg:px-8 pt-28 pb-16 min-h-[100svh] flex items-center">
-        <div className="max-w-3xl text-white">
+      <div className="relative z-10 flex items-center justify-center min-h-[100svh] px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl text-center text-white">
           <p className="text-xs tracking-[0.25em] text-white/70 uppercase">
             Web • Mobile • SaaS
           </p>
@@ -33,16 +33,13 @@ export default function Hero() {
           </p>
 
           {/* CTA buttons */}
-          <div className="mt-8 flex flex-wrap gap-3">
-            {/* Primary button */}
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a
               href="#contact"
               className="px-6 py-3 rounded-xl bg-teal-500 text-white hover:bg-teal-600 transition shadow-sm"
             >
               Start Your Project
             </a>
-
-            {/* Secondary button */}
             <a
               href="#services"
               className="px-6 py-3 rounded-xl border border-white/30 text-white hover:bg-white/10 transition"
@@ -52,7 +49,7 @@ export default function Hero() {
           </div>
 
           {/* trust chips */}
-          <div className="mt-8 flex flex-wrap gap-2 text-[13px]">
+          <div className="mt-8 flex flex-wrap justify-center gap-2 text-[13px]">
             <span className="px-3 py-1 rounded-full bg-white/10 border border-white/10">
               Websites & Mobile Apps
             </span>
