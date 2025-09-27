@@ -12,12 +12,13 @@ export default function About() {
             About Soleva
           </span>
           <h2 className="mt-6 text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl">
-            Turning <span className="text-teal-500">ideas</span> into digital reality
+            Turning <span className="text-teal-500">ideas</span> into lasting digital experiences
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-slate-600">
-            We craft modern websites, mobile apps, and custom software designed to empower
-            brands and businesses in today’s digital landscape. Our focus is on building
-            solutions that are reliable, scalable, and beautifully designed.
+            We design and build modern websites, mobile apps, and SaaS platforms that help
+            businesses scale and stand out. Our mission is to deliver solutions that are
+            fast, secure, and visually engaging - bridging creativity with technology to
+            bring every idea to life.
           </p>
         </div>
 
@@ -28,13 +29,18 @@ export default function About() {
             <div>
               <h3 className="text-xl font-semibold text-slate-900">Our Approach</h3>
               <p className="mt-4 text-slate-600">
-                We blend creativity and technical expertise to deliver products that go
-                beyond expectations. Every project is built with clean design, solid
-                engineering, and a focus on real-world impact.
+                Every project starts with understanding your vision. We combine clean design,
+                reliable engineering, and a focus on real business goals to craft digital
+                products that don’t just look good - they perform.
               </p>
             </div>
             <ul className="mt-8 grid grid-cols-2 gap-4">
-              {["Modern UI & UX", "Performance-first", "Secure by design", "Scalable & maintainable"].map((item) => (
+              {[
+                "Modern UI & UX",
+                "Performance-first",
+                "Secure by design",
+                "Scalable & maintainable",
+              ].map((item) => (
                 <li
                   key={item}
                   className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-2 text-sm text-slate-700"
@@ -52,14 +58,13 @@ export default function About() {
               <h3 className="text-xl font-semibold text-slate-900">Who We Are</h3>
               <p className="mt-4 text-slate-600">
                 Soleva was founded by <span className="font-medium">Souad</span> and{" "}
-                <span className="font-medium">Leen</span> - two passionate creators who
-                share a vision of making technology more accessible, innovative, and impactful.
+                <span className="font-medium">Leen</span> - two creators who believe
+                technology should be both powerful and human-centered.
               </p>
               <p className="mt-4 text-slate-600">
-                Together, we bring a balance of creativity and engineering to every project.
-                Soleva is not just a digital studio, it’s a partnership built on trust,
-                collaboration, and the belief that every idea deserves a chance to grow in the
-                digital world.
+                With a balance of creativity and engineering, we approach every project as
+                partners - not just developers. For us, it’s about building long-term trust
+                and creating digital solutions that leave an impact.
               </p>
             </div>
 
@@ -82,7 +87,7 @@ export default function About() {
                 href="#contact"
                 className="inline-flex items-center justify-center rounded-xl border border-transparent bg-teal-500 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
               >
-                Let’s build something great
+                Let’s bring your idea to life
               </a>
             </div>
           </div>

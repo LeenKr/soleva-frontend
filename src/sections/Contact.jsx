@@ -1,5 +1,5 @@
 // src/sections/Contact.jsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle2 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_BASE_URL || "";
@@ -23,21 +23,35 @@ export default function Contact() {
     setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
   }
 
-  function validate() {
+  function validate(f = form) {
     const e = {};
-    if (!form.name.trim()) e.name = "Please enter your name.";
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = "Enter a valid email.";
-    if (!form.projectType) e.projectType = "Select a project type.";
-    if (!form.message.trim()) e.message = "Tell us a bit about your project.";
-    if (!form.agree) e.agree = "You must agree before submitting.";
+    if (!f.name.trim()) e.name = "Please enter your name.";
+    if (!/^\S+@\S+\.\S+$/.test(f.email)) e.email = "Enter a valid email.";
+    if (!f.projectType) e.projectType = "Select a project type.";
+    if (!f.message.trim() || f.message.trim().length < 10)
+      e.message = "Tell us a bit about your project (min 10 chars).";
+    if (!f.agree) e.agree = "You must agree before submitting.";
     return e;
   }
 
+  const isValid = useMemo(() => Object.keys(validate()).length === 0, [form]);
+
   async function onSubmit(ev) {
     ev.preventDefault();
+
+    // Honeypot: if a bot filled it, silently "succeed"
+    if (form.website) {
+      setStatus({ sending: false, ok: true, fail: "" });
+      return;
+    }
+
     const v = validate();
     setErrors(v);
     if (Object.keys(v).length) return;
+
+    // 20s timeout guard
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 20000);
 
     try {
       setStatus({ sending: true, ok: false, fail: "" });
@@ -45,8 +59,14 @@ export default function Contact() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        signal: controller.signal,
       });
-      if (!res.ok) throw new Error("Failed to send");
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to send");
+      }
+
       setStatus({ sending: false, ok: true, fail: "" });
       setForm({
         name: "",
@@ -58,27 +78,21 @@ export default function Contact() {
         agree: false,
         website: "",
       });
-    } catch {
-      setStatus({
-        sending: false,
-        ok: false,
-        fail: "Something went wrong. Please try again.",
-      });
+      setErrors({});
+    } catch (e) {
+      const msg =
+        e.name === "AbortError"
+          ? "Network timeout. Please try again."
+          : e.message || "Something went wrong. Please try again.";
+      setStatus({ sending: false, ok: false, fail: msg });
+    } finally {
+      clearTimeout(t);
     }
   }
 
   return (
-    <section
-      id="contact"
-      className="
-        relative bg-gradient-to-b from-slate-50 via-white to-slate-50
-        py-24
-      "
-    >
-      {/* soft fade from previous section */}
+    <section id="contact" className="relative bg-gradient-to-b from-slate-50 via-white to-slate-50 py-24">
       <div className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-b from-slate-50 to-transparent" />
-
-      {/* FULL-WIDTH container */}
       <div className="px-6 lg:px-16">
         {/* Header */}
         <div className="mx-auto max-w-4xl text-center">
@@ -87,22 +101,18 @@ export default function Contact() {
             Contact
           </span>
           <h2 className="mt-6 text-4xl sm:text-5xl font-extrabold leading-tight text-slate-900">
-            Let’s build something <span className="text-teal-500">great</span>{" "}
-            together
+            Let’s build something <span className="text-teal-500">great</span> together
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-slate-600">
-            Tell us about your idea, timeline, and goals. We’ll get back within
-            24–48 hours with next steps.
+            Tell us about your idea, timeline, and goals. We’ll get back within 24–48 hours with next steps.
           </p>
         </div>
 
-        {/* Grid: Info + Form */}
+        {/* Grid */}
         <div className="mt-16 grid gap-8 md:grid-cols-5">
           {/* Info card */}
           <aside className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-7 shadow-md hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Ways to reach us
-            </h3>
+            <h3 className="text-lg font-semibold text-slate-900">Ways to reach us</h3>
             <ul className="mt-5 space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
@@ -110,10 +120,7 @@ export default function Contact() {
                 </span>
                 <div>
                   <p className="font-medium text-slate-900">Email</p>
-                  <a
-                    href="mailto:hello@soleva.studio"
-                    className="text-slate-600 hover:text-slate-900"
-                  >
+                  <a href="mailto:soleva.dev@gmail.com" className="text-slate-600 hover:text-slate-900">
                     soleva.dev@gmail.com
                   </a>
                 </div>
@@ -140,9 +147,7 @@ export default function Contact() {
                 </span>
                 <div>
                   <p className="font-medium text-slate-900">Location</p>
-                  <p className="text-slate-600">
-                    Saida, Lebanon · Remote worldwide
-                  </p>
+                  <p className="text-slate-600">Saida, Lebanon · Remote worldwide</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -159,35 +164,27 @@ export default function Contact() {
             <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-xs text-slate-500">Focus</p>
-                <p className="mt-1 font-medium text-slate-900">
-                  Web • Mobile • SaaS
-                </p>
+                <p className="mt-1 font-medium text-slate-900">Web • Mobile • SaaS</p>
               </div>
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-xs text-slate-500">Approach</p>
-                <p className="mt-1 font-medium text-slate-900">
-                  Quality • Clarity
-                </p>
+                <p className="mt-1 font-medium text-slate-900">Quality • Clarity</p>
               </div>
             </div>
           </aside>
 
           {/* Form card */}
           <div className="md:col-span-3 rounded-2xl border border-slate-200 bg-white p-7 shadow-md hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Tell us about your project
-            </h3>
+            <h3 className="text-lg font-semibold text-slate-900">Tell us about your project</h3>
 
             {status.ok && (
-              <div className="mt-4 flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800">
+              <div className="mt-4 flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800" role="status" aria-live="polite">
                 <CheckCircle2 className="h-5 w-5" />
-                <p className="text-sm">
-                  Thanks! Your message has been sent. We’ll reply soon.
-                </p>
+                <p className="text-sm">Thanks! Your message has been sent. We’ll reply soon.</p>
               </div>
             )}
             {status.fail && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm">
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm" role="alert">
                 {status.fail}
               </div>
             )}
@@ -206,61 +203,52 @@ export default function Contact() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-700">
                     Full name *
                   </label>
                   <input
                     id="name"
                     name="name"
                     type="text"
+                    autoComplete="name"
                     value={form.name}
                     onChange={onChange}
                     aria-invalid={!!errors.name}
                     className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
                     placeholder="Your name"
                   />
-                  {errors.name && (
-                    <p className="mt-1 text-xs text-red-600">{errors.name}</p>
-                  )}
+                  {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
                 </div>
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                     Email *
                   </label>
                   <input
                     id="email"
                     name="email"
                     type="email"
+                    autoComplete="email"
                     value={form.email}
                     onChange={onChange}
                     aria-invalid={!!errors.email}
                     className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
                     placeholder="name@company.com"
                   />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
-                  )}
+                  {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
                 </div>
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
                     Phone (optional)
                   </label>
                   <input
                     id="phone"
                     name="phone"
                     type="tel"
+                    autoComplete="tel"
+                    inputMode="tel"
                     value={form.phone}
                     onChange={onChange}
                     className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
@@ -268,10 +256,7 @@ export default function Contact() {
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="projectType"
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor="projectType" className="block text-sm font-medium text-slate-700">
                     Project type *
                   </label>
                   <select
@@ -289,26 +274,19 @@ export default function Contact() {
                     <option>SaaS / Dashboard</option>
                     <option>Other</option>
                   </select>
-                  {errors.projectType && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {errors.projectType}
-                    </p>
-                  )}
+                  {errors.projectType && <p className="mt-1 text-xs text-red-600">{errors.projectType}</p>}
                 </div>
               </div>
 
-              {/* Budget (optional text input) */}
               <div>
-                <label
-                  htmlFor="budget"
-                  className="block text-sm font-medium text-slate-700"
-                >
+                <label htmlFor="budget" className="block text-sm font-medium text-slate-700">
                   Estimated budget (optional)
                 </label>
                 <input
                   id="budget"
                   name="budget"
                   type="text"
+                  autoComplete="off"
                   value={form.budget}
                   onChange={onChange}
                   className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
@@ -317,10 +295,7 @@ export default function Contact() {
               </div>
 
               <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-slate-700"
-                >
+                <label htmlFor="message" className="block text-sm font-medium text-slate-700">
                   Project details *
                 </label>
                 <textarea
@@ -330,12 +305,14 @@ export default function Contact() {
                   value={form.message}
                   onChange={onChange}
                   aria-invalid={!!errors.message}
+                  maxLength={2000}
                   className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
                   placeholder="Tell us about goals, features, and timeline…"
                 />
-                {errors.message && (
-                  <p className="mt-1 text-xs text-red-600">{errors.message}</p>
-                )}
+                <div className="mt-1 text-[11px] text-slate-500">
+                  {form.message.length}/2000
+                </div>
+                {errors.message && <p className="mt-1 text-xs text-red-600">{errors.message}</p>}
               </div>
 
               <label className="flex items-start gap-3 text-sm text-slate-700">
@@ -347,18 +324,16 @@ export default function Contact() {
                   className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                 />
                 <span>
-                  I agree to be contacted about my inquiry. I understand my info
-                  will be handled securely.
+                  I agree to be contacted about my inquiry. I understand my info will be handled securely.
                 </span>
               </label>
-              {errors.agree && (
-                <p className="text-xs text-red-600">{errors.agree}</p>
-              )}
+              {errors.agree && <p className="text-xs text-red-600">{errors.agree}</p>}
 
               <button
                 type="submit"
-                disabled={status.sending}
+                disabled={status.sending || !isValid}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-60"
+                aria-busy={status.sending}
               >
                 <Send className="h-4 w-4" />
                 {status.sending ? "Sending…" : "Send message"}
@@ -367,7 +342,6 @@ export default function Contact() {
           </div>
         </div>
       </div>
-      {/* no extra bottom block -> footer sits snugly */}
     </section>
   );
 }
