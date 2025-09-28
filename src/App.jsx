@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next"
 import Navbar from "./components/Navbar";
 import Hero from "./sections/Hero";   // ✅ import Hero
 import Services from "./sections/Services";
@@ -15,6 +16,7 @@ export default function App() {
         <Contact /> {/* ✅ Contact route/section */}
       </main>
       <Footer />
+       <Analytics />
     </div>
   );
 }
