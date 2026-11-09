@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local secrets and inspection artifacts
+.env
+.env.*
+!.env.example
+.qa/
+.audit-stage/

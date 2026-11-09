@@ -1,22 +1,29 @@
-import { Analytics } from "@vercel/analytics/react"
+﻿import { useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import Navbar from "./components/Navbar";
-import Hero from "./sections/Hero";   // ✅ import Hero
-import Services from "./sections/Services";
+import Hero from "./sections/Hero";
 import About from "./sections/About";
+import Services from "./sections/Services";
 import Contact from "./sections/Contact";
 import Footer from "./components/Footer";
 export default function App() {
+  const [selection, setSelection] = useState(null);
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <>
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <Navbar />
-      <main>
-        <Hero />   {/* ✅ Hero route/section */}
-        <About />  {/* ✅ About route/section */}
-        <Services />  
-        <Contact /> {/* ✅ Contact route/section */}
+      <main id="main">
+        <Hero />
+        <About />
+        <Services
+          onSelect={(type) => setSelection({ type, timestamp: Date.now() })}
+        />
+        <Contact selection={selection} />
       </main>
       <Footer />
-       <Analytics />
-    </div>
+      <Analytics />
+    </>
   );
 }

@@ -1,0 +1,3 @@
+﻿User-agent: *
+Allow: /
+Sitemap: https://soleva-alpha.vercel.app/sitemap.xml

@@ -1,343 +1,369 @@
-// src/sections/Contact.jsx
-import { useMemo, useState } from "react";
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle2 } from "lucide-react";
-
-const API = import.meta.env.VITE_API_BASE_URL || "";
-
-export default function Contact() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    projectType: "",
-    budget: "",
-    message: "",
-    agree: false,
-    website: "", // honeypot
-  });
+﻿import { useEffect, useRef, useState } from "react";
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  Clock,
+  LoaderCircle,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+} from "lucide-react";
+const API = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+const types = [
+  "Landing Page",
+  "Website",
+  "Mobile App",
+  "SaaS / Dashboard",
+  "Other",
+];
+const empty = () => ({
+  name: "",
+  email: "",
+  phone: "",
+  projectType: "",
+  budget: "",
+  message: "",
+  agree: false,
+  website: "",
+});
+function validate(form) {
+  const errors = {};
+  if (form.name.trim().length < 2 || form.name.trim().length > 100)
+    errors.name = "Enter your name (2–100 characters).";
+  if (!/^\S+@\S+\.\S+$/.test(form.email.trim()) || form.email.length > 254)
+    errors.email = "Enter a valid email address.";
+  if (form.phone.length > 50)
+    errors.phone = "Keep your phone number under 50 characters.";
+  if (!types.includes(form.projectType))
+    errors.projectType = "Choose a project type.";
+  if (form.budget.length > 200)
+    errors.budget = "Keep your budget under 200 characters.";
+  if (form.message.trim().length < 10 || form.message.length > 2000)
+    errors.message = "Tell us a little more (10–2,000 characters).";
+  if (!form.agree)
+    errors.agree = "Please agree to be contacted about this inquiry.";
+  return errors;
+}
+export default function Contact({ selection }) {
+  const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ sending: false, ok: false, fail: "" });
-
+  const [slow, setSlow] = useState(false);
+  const lock = useRef(false);
+  const request = useRef(null);
+  const attempt = useRef(null);
+  const formRef = useRef(null);
+  useEffect(() => {
+    if (selection) setForm((f) => ({ ...f, projectType: selection.type }));
+  }, [selection]);
+  useEffect(() => () => request.current?.abort(), []);
   function onChange(e) {
     const { name, value, type, checked } = e.target;
     setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+    setErrors((old) => ({ ...old, [name]: undefined }));
+    setStatus((s) => ({ ...s, ok: false, fail: "" }));
   }
-
-  function validate(f = form) {
-    const e = {};
-    if (!f.name.trim()) e.name = "Please enter your name.";
-    if (!/^\S+@\S+\.\S+$/.test(f.email)) e.email = "Enter a valid email.";
-    if (!f.projectType) e.projectType = "Select a project type.";
-    if (!f.message.trim() || f.message.trim().length < 10)
-      e.message = "Tell us a bit about your project (min 10 chars).";
-    if (!f.agree) e.agree = "You must agree before submitting.";
-    return e;
-  }
-
-  const isValid = useMemo(() => Object.keys(validate()).length === 0, [form]);
-
-  async function onSubmit(ev) {
-    ev.preventDefault();
-
-    // Honeypot: if a bot filled it, silently "succeed"
-    if (form.website) {
-      setStatus({ sending: false, ok: true, fail: "" });
+  async function onSubmit(event) {
+    event.preventDefault();
+    if (lock.current) return;
+    const invalid = validate(form);
+    setErrors(invalid);
+    if (Object.keys(invalid).length) {
+      formRef.current?.elements.namedItem(Object.keys(invalid)[0])?.focus();
       return;
     }
-
-    const v = validate();
-    setErrors(v);
-    if (Object.keys(v).length) return;
-
-    // 20s timeout guard
+    lock.current = true;
+    const payload = JSON.stringify({
+      ...form,
+      name: form.name.trim(),
+      email: form.email.trim(),
+      message: form.message.trim(),
+    });
+    if (attempt.current?.payload !== payload)
+      attempt.current = { payload, key: crypto.randomUUID() };
     const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 20000);
-
+    request.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 65000);
+    const slowTimer = setTimeout(() => setSlow(true), 10000);
+    setStatus({ sending: true, ok: false, fail: "" });
     try {
-      setStatus({ sending: true, ok: false, fail: "" });
-      const res = await fetch(`${API}/api/contact`, {
+      const response = await fetch(`${API}/api/contact`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": attempt.current.key,
+        },
+        body: payload,
         signal: controller.signal,
       });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.error || "Failed to send");
+      const data = await response.json().catch(() => null);
+      if (!response.ok || data?.ok !== true || !data?.messageId) {
+        if (data?.fields) setErrors(data.fields);
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : response.status === 429
+              ? "Too many requests. Please wait a minute and try again."
+              : "We couldn't confirm your message. Please try again or email us directly.",
+        );
       }
-
       setStatus({ sending: false, ok: true, fail: "" });
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        projectType: "",
-        budget: "",
-        message: "",
-        agree: false,
-        website: "",
+      setForm(empty());
+      attempt.current = null;
+    } catch (error) {
+      setStatus({
+        sending: false,
+        ok: false,
+        fail:
+          error.name === "AbortError"
+            ? "The request timed out. Delivery couldn't be confirmed. Retry the same message, or email us directly."
+            : error instanceof TypeError
+              ? "We couldn't reach the server. Check your connection and try again, or email us directly."
+              : error.message,
       });
-      setErrors({});
-    } catch (e) {
-      const msg =
-        e.name === "AbortError"
-          ? "Network timeout. Please try again."
-          : e.message || "Something went wrong. Please try again.";
-      setStatus({ sending: false, ok: false, fail: msg });
     } finally {
-      clearTimeout(t);
+      clearTimeout(timeout);
+      clearTimeout(slowTimer);
+      setSlow(false);
+      lock.current = false;
+      request.current = null;
     }
   }
-
+  const field = (name, label, props = {}) => (
+    <div className="form-field">
+      <label htmlFor={name}>{label}</label>
+      <input
+        id={name}
+        name={name}
+        value={form[name]}
+        onChange={onChange}
+        aria-invalid={!!errors[name]}
+        aria-describedby={errors[name] ? `${name}-error` : undefined}
+        {...props}
+      />
+      {errors[name] && (
+        <p className="field-error" id={`${name}-error`}>
+          {errors[name]}
+        </p>
+      )}
+    </div>
+  );
   return (
-    <section id="contact" className="relative bg-gradient-to-b from-slate-50 via-white to-slate-50 py-24">
-      <div className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-b from-slate-50 to-transparent" />
-      <div className="px-6 lg:px-16">
-        {/* Header */}
-        <div className="mx-auto max-w-4xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-1.5 text-xs font-medium tracking-wide text-slate-700 shadow-sm backdrop-blur">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-            Contact
-          </span>
-          <h2 className="mt-6 text-4xl sm:text-5xl font-extrabold leading-tight text-slate-900">
-            Let’s build something <span className="text-teal-500">great</span> together
-          </h2>
-          <p className="mt-6 text-lg leading-relaxed text-slate-600">
-            Tell us about your idea, timeline, and goals. We’ll get back within 24–48 hours with next steps.
-          </p>
+    <section id="contact" className="section contact-section">
+      <div className="shell">
+        <div className="eyebrow">
+          <span />
+          03 / Start a conversation
         </div>
-
-        {/* Grid */}
-        <div className="mt-16 grid gap-8 md:grid-cols-5">
-          {/* Info card */}
-          <aside className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-7 shadow-md hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-slate-900">Ways to reach us</h3>
-            <ul className="mt-5 space-y-4 text-sm">
-              <li className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                  <Mail className="h-4 w-4 text-slate-700" />
-                </span>
+        <div className="contact-grid">
+          <div className="contact-copy">
+            <h2>
+              Big idea?
+              <br />
+              <span className="muted">Let's build it.</span>
+            </h2>
+            <p>
+              Tell us what you have in mind. We'll help you find the right next
+              step, from an early idea to a project ready to go.
+            </p>
+            <div className="contact-details">
+              <div>
+                <Mail size={20} />
                 <div>
-                  <p className="font-medium text-slate-900">Email</p>
-                  <a href="mailto:soleva.dev@gmail.com" className="text-slate-600 hover:text-slate-900">
-                    soleva.dev@gmail.com
+                  <span>Email us</span>
+                  <a href="mailto:soleva.dev@gmail.com">
+                    soleva.dev@gmail.com <ArrowUpRight size={15} />
                   </a>
                 </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                  <Phone className="h-4 w-4 text-slate-700" />
-                </span>
-                <div>
-                  <p className="font-medium text-slate-900">Phone / WhatsApp</p>
-                  <a
-                    href="https://wa.me/96181750923"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-slate-600 hover:text-slate-900"
-                  >
-                    +961 81 750 923
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                  <MapPin className="h-4 w-4 text-slate-700" />
-                </span>
-                <div>
-                  <p className="font-medium text-slate-900">Location</p>
-                  <p className="text-slate-600">Saida, Lebanon · Remote worldwide</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                  <Clock className="h-4 w-4 text-slate-700" />
-                </span>
-                <div>
-                  <p className="font-medium text-slate-900">Response time</p>
-                  <p className="text-slate-600">Typically within 24–48 hours</p>
-                </div>
-              </li>
-            </ul>
-
-            <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-xs text-slate-500">Focus</p>
-                <p className="mt-1 font-medium text-slate-900">Web • Mobile • SaaS</p>
               </div>
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-xs text-slate-500">Approach</p>
-                <p className="mt-1 font-medium text-slate-900">Quality • Clarity</p>
+              <div>
+                <Phone size={20} />
+                <div>
+                  <span>Give us a call</span>
+                  <a href="tel:+96181750923">+961 81 750 923</a>
+                </div>
+              </div>
+              <div>
+                <MapPin size={20} />
+                <div>
+                  <span>Based in Saida, Lebanon</span>
+                  <p>Working with you, worldwide.</p>
+                </div>
               </div>
             </div>
-          </aside>
-
-          {/* Form card */}
-          <div className="md:col-span-3 rounded-2xl border border-slate-200 bg-white p-7 shadow-md hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-slate-900">Tell us about your project</h3>
-
-            {status.ok && (
-              <div className="mt-4 flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800" role="status" aria-live="polite">
-                <CheckCircle2 className="h-5 w-5" />
-                <p className="text-sm">Thanks! Your message has been sent. We’ll reply soon.</p>
-              </div>
-            )}
-            {status.fail && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm" role="alert">
-                {status.fail}
-              </div>
-            )}
-
-            <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5">
-              {/* hidden honeypot */}
-              <input
-                type="text"
-                name="website"
-                value={form.website}
-                onChange={onChange}
-                className="hidden"
-                tabIndex={-1}
-                autoComplete="off"
-              />
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-                    Full name *
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    autoComplete="name"
-                    value={form.name}
-                    onChange={onChange}
-                    aria-invalid={!!errors.name}
-                    className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
-                    placeholder="Your name"
-                  />
-                  {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                    Email *
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    value={form.email}
-                    onChange={onChange}
-                    aria-invalid={!!errors.email}
-                    className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
-                    placeholder="name@company.com"
-                  />
-                  {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-                </div>
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
-                    Phone (optional)
-                  </label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    autoComplete="tel"
-                    inputMode="tel"
-                    value={form.phone}
-                    onChange={onChange}
-                    className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
-                    placeholder="+961 …"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="projectType" className="block text-sm font-medium text-slate-700">
-                    Project type *
-                  </label>
-                  <select
-                    id="projectType"
-                    name="projectType"
-                    value={form.projectType}
-                    onChange={onChange}
-                    aria-invalid={!!errors.projectType}
-                    className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                  >
-                    <option value="">Select…</option>
-                    <option>Landing Page</option>
-                    <option>Website</option>
-                    <option>Mobile app</option>
-                    <option>SaaS / Dashboard</option>
-                    <option>Other</option>
-                  </select>
-                  {errors.projectType && <p className="mt-1 text-xs text-red-600">{errors.projectType}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="budget" className="block text-sm font-medium text-slate-700">
-                  Estimated budget (optional)
-                </label>
+            <a
+              className="whatsapp-link"
+              href="https://wa.me/96181750923"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle size={18} />
+              Prefer WhatsApp? Say hello <ArrowUpRight size={16} />
+            </a>
+            <div className="response-note">
+              <Clock size={17} />
+              <span>A thoughtful reply within 24–48 hours.</span>
+            </div>
+          </div>
+          <div className="contact-form-card">
+            <div className="form-heading">
+              <h3>Tell us about your project</h3>
+              <p>A few details are all we need to get started.</p>
+            </div>
+            <form ref={formRef} onSubmit={onSubmit} noValidate>
+              <div className="honeypot" aria-hidden="true">
+                <label htmlFor="website">Leave this field empty</label>
                 <input
-                  id="budget"
-                  name="budget"
-                  type="text"
+                  id="website"
+                  name="website"
+                  value={form.website}
+                  onChange={onChange}
+                  tabIndex={-1}
                   autoComplete="off"
-                  value={form.budget}
-                  onChange={onChange}
-                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
-                  placeholder="$2,000 — $5,000 or 'Not sure yet'"
                 />
               </div>
-
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-slate-700">
-                  Project details *
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={5}
-                  value={form.message}
-                  onChange={onChange}
-                  aria-invalid={!!errors.message}
-                  maxLength={2000}
-                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"
-                  placeholder="Tell us about goals, features, and timeline…"
-                />
-                <div className="mt-1 text-[11px] text-slate-500">
-                  {form.message.length}/2000
+              <fieldset disabled={status.sending}>
+                <legend className="sr-only">Project inquiry</legend>
+                <div className="form-row">
+                  {field("name", "Full name *", {
+                    required: true,
+                    autoComplete: "name",
+                    placeholder: "Your full name",
+                    maxLength: 100,
+                  })}
+                  {field("email", "Email address *", {
+                    type: "email",
+                    required: true,
+                    autoComplete: "email",
+                    placeholder: "you@company.com",
+                    maxLength: 254,
+                  })}
                 </div>
-                {errors.message && <p className="mt-1 text-xs text-red-600">{errors.message}</p>}
-              </div>
-
-              <label className="flex items-start gap-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  name="agree"
-                  checked={form.agree}
-                  onChange={onChange}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                />
-                <span>
-                  I agree to be contacted about my inquiry. I understand my info will be handled securely.
-                </span>
-              </label>
-              {errors.agree && <p className="text-xs text-red-600">{errors.agree}</p>}
-
-              <button
-                type="submit"
-                disabled={status.sending || !isValid}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-60"
-                aria-busy={status.sending}
-              >
-                <Send className="h-4 w-4" />
-                {status.sending ? "Sending…" : "Send message"}
-              </button>
+                <div className="form-row">
+                  {field("phone", "Phone (optional)", {
+                    type: "tel",
+                    autoComplete: "tel",
+                    placeholder: "+961 …",
+                    maxLength: 50,
+                  })}
+                  <div className="form-field">
+                    <label htmlFor="projectType">Project type *</label>
+                    <select
+                      required
+                      id="projectType"
+                      name="projectType"
+                      value={form.projectType}
+                      onChange={onChange}
+                      aria-invalid={!!errors.projectType}
+                      aria-describedby={
+                        errors.projectType ? "projectType-error" : undefined
+                      }
+                    >
+                      <option value="">What are we building?</option>
+                      {types.map((type) => (
+                        <option key={type}>{type}</option>
+                      ))}
+                    </select>
+                    {errors.projectType && (
+                      <p id="projectType-error" className="field-error">
+                        {errors.projectType}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {field("budget", "Estimated budget (optional)", {
+                  placeholder: "A range, a rough idea, or ‘not sure yet’",
+                  maxLength: 200,
+                })}
+                <div className="form-field">
+                  <label htmlFor="message">Project details *</label>
+                  <textarea
+                    required
+                    id="message"
+                    name="message"
+                    value={form.message}
+                    onChange={onChange}
+                    rows={5}
+                    minLength={10}
+                    maxLength={2000}
+                    placeholder="What would you like to create? Tell us about your goals, features, or timeline."
+                    aria-invalid={!!errors.message}
+                    aria-describedby={`message-hint${errors.message ? " message-error" : ""}`}
+                  />
+                  <div id="message-hint" className="input-hint">
+                    A little context goes a long way.
+                    <span>{form.message.length}/2000</span>
+                  </div>
+                  {errors.message && (
+                    <p id="message-error" className="field-error">
+                      {errors.message}
+                    </p>
+                  )}
+                </div>
+                <label className="consent">
+                  <input
+                    required
+                    id="agree"
+                    type="checkbox"
+                    name="agree"
+                    checked={form.agree}
+                    onChange={onChange}
+                    aria-invalid={!!errors.agree}
+                    aria-describedby={errors.agree ? "agree-error" : undefined}
+                  />
+                  <span>
+                    I agree to be contacted by SOLEVA about my inquiry.
+                  </span>
+                </label>
+                {errors.agree && (
+                  <p id="agree-error" className="field-error">
+                    {errors.agree}
+                  </p>
+                )}
+                <button
+                  className="button submit-button"
+                  type="submit"
+                  disabled={status.sending}
+                  aria-busy={status.sending}
+                >
+                  {status.sending ? (
+                    <>
+                      <LoaderCircle size={18} className="spinner" />
+                      Sending your message…
+                    </>
+                  ) : (
+                    <>
+                      Send Your Inquiry <Send size={17} />
+                    </>
+                  )}
+                </button>
+              </fieldset>
+              {slow && (
+                <p role="status" className="input-hint">
+                  Connecting to SOLEVA. This can take a moment; please keep
+                  this page open.
+                </p>
+              )}
+              {status.ok && (
+                <div className="feedback success" role="status">
+                  <CheckCircle2 size={20} />
+                  <p>
+                    Your inquiry has been accepted for delivery. We'll get back
+                    to you within 24–48 hours.
+                  </p>
+                </div>
+              )}
+              {status.fail && (
+                <div className="feedback failure" role="alert">
+                  <p>{status.fail}</p>
+                </div>
+              )}
+              <p className="form-footnote">
+                Prefer your inbox?{" "}
+                <a href="mailto:soleva.dev@gmail.com">Email us directly.</a>
+              </p>
             </form>
           </div>
         </div>
